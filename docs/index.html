@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Countdown 演示 · superagent-trial</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b18;
+      --panel: rgba(17, 25, 47, 0.78);
+      --border: rgba(148, 168, 255, 0.22);
+      --text: #e8ecff;
+      --muted: #9aa6c8;
+      --accent: #6ea8ff;
+      --accent-2: #b388ff;
+      --error: #ff8d9b;
+      --mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(1100px 640px at 12% -12%, rgba(110, 168, 255, 0.24), transparent 62%),
+        radial-gradient(900px 560px at 108% 6%, rgba(179, 136, 255, 0.2), transparent 58%),
+        var(--bg);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1.6px 1.6px at 18% 24%, rgba(255, 255, 255, 0.75), transparent),
+        radial-gradient(1.4px 1.4px at 72% 16%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1.2px 1.2px at 41% 62%, rgba(255, 255, 255, 0.45), transparent),
+        radial-gradient(1.5px 1.5px at 87% 48%, rgba(255, 255, 255, 0.55), transparent),
+        radial-gradient(1.2px 1.2px at 8% 78%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(1.4px 1.4px at 63% 84%, rgba(255, 255, 255, 0.5), transparent);
+    }
+
+    main {
+      position: relative;
+      width: min(100% - 40px, 940px);
+      margin: 0 auto;
+      padding: 56px 0 48px;
+      flex: 1 0 auto;
+    }
+
+    .hero {
+      margin-bottom: 32px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(40px, 7vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      background: linear-gradient(100deg, #ffffff 10%, #a9c4ff 55%, #cbb0ff 95%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      max-width: 640px;
+      margin: 18px 0 0;
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .lead strong {
+      color: var(--text);
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 28px;
+      align-items: center;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(2, 7, 22, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+    }
+
+    .controls label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #n-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 13px 16px;
+      font: inherit;
+      font-size: 18px;
+      color: var(--text);
+      background: rgba(6, 11, 26, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #n-input::placeholder {
+      color: #66739a;
+    }
+
+    #n-input:focus-visible {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(110, 168, 255, 0.25);
+    }
+
+    #n-input[aria-invalid="true"] {
+      border-color: var(--error);
+    }
+
+    button {
+      padding: 13px 24px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 600;
+      color: #06102a;
+      background: linear-gradient(120deg, #8ab4ff, #b9a0ff);
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.16s ease, filter 0.16s ease;
+      box-shadow: 0 8px 24px rgba(110, 168, 255, 0.35);
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(110, 168, 255, 0.45);
+      outline-offset: 2px;
+    }
+
+    button:disabled {
+      cursor: progress;
+      opacity: 0.6;
+      box-shadow: none;
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .hint code,
+    .about code {
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #cfe0ff;
+      background: rgba(110, 168, 255, 0.12);
+      padding: 1px 5px;
+      border-radius: 5px;
+    }
+
+    .error {
+      margin: 12px 0 0;
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--error);
+      background: rgba(255, 113, 132, 0.1);
+      border: 1px solid rgba(255, 141, 155, 0.35);
+      border-radius: 10px;
+    }
+
+    .stage {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      padding: 20px;
+      overflow: hidden;
+      border-radius: 18px;
+      background:
+        radial-gradient(420px 220px at 50% 40%, rgba(110, 168, 255, 0.18), transparent 70%),
+        rgba(5, 9, 22, 0.65);
+      border: 1px solid rgba(148, 168, 255, 0.16);
+    }
+
+    .stage-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .number {
+      margin: 14px 0 0;
+      font-size: clamp(84px, 16vw, 150px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      color: #ffffff;
+      text-shadow: 0 0 42px rgba(110, 168, 255, 0.55);
+    }
+
+    .number.tick {
+      animation: pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.35);
+    }
+
+    .number.liftoff {
+      font-size: clamp(52px, 9vw, 84px);
+      letter-spacing: -0.01em;
+      background: linear-gradient(100deg, #ffffff, #9ec0ff 45%, #d3b8ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
+      animation: liftoff 0.9s cubic-bezier(0.16, 0.8, 0.3, 1) both;
+    }
+
+    @keyframes pop {
+      0% {
+        opacity: 0.15;
+        transform: scale(0.55);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(1.12);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes liftoff {
+      0% {
+        opacity: 0;
+        transform: translateY(26px) scale(0.9);
+      }
+      55% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.04);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .about {
+      margin-top: 34px;
+      padding: 22px 26px;
+      border: 1px solid rgba(148, 168, 255, 0.14);
+      border-radius: 16px;
+      background: rgba(12, 18, 36, 0.55);
+    }
+
+    .about h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      letter-spacing: 0.01em;
+    }
+
+    .about p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .about p + p {
+      margin-top: 8px;
+    }
+
+    footer {
+      position: relative;
+      flex-shrink: 0;
+      padding: 18px 20px 26px;
+      text-align: center;
+      font-size: 13px;
+      color: #6f7ca3;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding-top: 40px;
+      }
+
+      .panel {
+        grid-template-columns: 1fr;
+        padding: 22px;
+        gap: 20px;
+      }
+
+      .stage {
+        min-height: 200px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .number.tick,
+      .number.liftoff {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <p class="eyebrow">superagent-trial · 交互演示</p>
+      <h1>Countdown</h1>
+      <p class="lead">
+        输入一个正整数 N，点击“开始”后页面会从 N 倒数到 1，最后显示
+        <strong>Liftoff!</strong>。它是仓库中 <code>scripts/countdown.py</code>
+        的可视化版本，使用相同的倒数逻辑（为保证动画流畅，演示最多支持 999）。
+      </p>
+    </header>
+
+    <section class="panel" aria-labelledby="demo-title">
+      <h2 id="demo-title" class="sr-only">倒计时演示</h2>
+
+      <form id="countdown-form" class="controls" novalidate>
+        <label for="n-input">起始数字 N</label>
+        <div class="input-row">
+          <input
+            id="n-input"
+            name="n"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="例如 5"
+            aria-describedby="hint error"
+          >
+          <button id="start-button" type="submit">开始</button>
+        </div>
+        <p id="hint" class="hint">请输入 1–999 之间的正整数，例如 <code>5</code>。</p>
+        <p id="error" class="error" role="alert" hidden></p>
+      </form>
+
+      <div class="stage" id="stage" aria-live="polite">
+        <span class="stage-label">倒计时</span>
+        <p class="number" id="display">N</p>
+      </div>
+    </section>
+
+    <section class="about">
+      <h2>关于本项目</h2>
+      <p>
+        superagent-trial 是一个小型演示仓库，核心是命令行脚本
+        <code>scripts/countdown.py</code>：接收正整数 N，逐行打印 N 到 1，
+        最后输出 <code>Liftoff!</code>；非法输入以退出码 2 报错，并支持
+        <code>--help</code>。测试位于 <code>tests/</code>，使用 pytest。
+      </p>
+      <p>
+        本页面是它的纯静态演示，由 GitHub Pages 从 <code>docs/</code> 目录部署，
+        不依赖任何前端框架或外部资源。
+      </p>
+    </section>
+  </main>
+
+  <footer>superagent-trial · static demo, no external dependencies</footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var MAX_N = 999;
+      var form = document.getElementById("countdown-form");
+      var input = document.getElementById("n-input");
+      var startButton = document.getElementById("start-button");
+      var display = document.getElementById("display");
+      var stage = document.getElementById("stage");
+      var errorEl = document.getElementById("error");
+      var timer = null;
+
+      function clearError() {
+        errorEl.hidden = true;
+        errorEl.textContent = "";
+        input.removeAttribute("aria-invalid");
+      }
+
+      function showError(message) {
+        errorEl.textContent = message;
+        errorEl.hidden = false;
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+      }
+
+      function parseN(raw) {
+        var value = String(raw).trim();
+
+        if (value === "") {
+          return { error: "请输入一个正整数，例如 5。" };
+        }
+        if (!/^\d+$/.test(value)) {
+          return { error: "N 必须是正整数，只能包含数字，例如 5。" };
+        }
+
+        var n = Number(value);
+        if (n < 1) {
+          return { error: "N 必须大于 0，例如 5。" };
+        }
+        if (n > MAX_N) {
+          return { error: "演示最多支持 " + MAX_N + "，请输入 1–" + MAX_N + " 的正整数。" };
+        }
+        return { n: n };
+      }
+
+      function stopTimer() {
+        if (timer !== null) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      }
+
+      function showNumber(n) {
+        display.classList.remove("liftoff");
+        display.textContent = String(n);
+        display.classList.remove("tick");
+        void display.offsetWidth;
+        display.classList.add("tick");
+      }
+
+      function showLiftoff() {
+        display.classList.remove("tick");
+        display.classList.add("liftoff");
+        display.textContent = "Liftoff!";
+        input.disabled = false;
+        startButton.disabled = false;
+        input.focus();
+      }
+
+      function startCountdown(n) {
+        stopTimer();
+        clearError();
+        input.disabled = true;
+        startButton.disabled = true;
+
+        var current = n;
+        var delay = n <= 10 ? 700 : Math.max(16, Math.round(6000 / n));
+
+        function step() {
+          if (current > 1) {
+            current -= 1;
+            showNumber(current);
+            timer = setTimeout(step, delay);
+          } else {
+            timer = null;
+            showLiftoff();
+          }
+        }
+
+        showNumber(current);
+        timer = setTimeout(step, delay);
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var result = parseN(input.value);
+        if (result.error) {
+          showError(result.error);
+          return;
+        }
+        startCountdown(result.n);
+      });
+
+      input.addEventListener("input", clearError);
+      window.addEventListener("pagehide", stopTimer);
+    })();
+  </script>
+</body>
+</html>
