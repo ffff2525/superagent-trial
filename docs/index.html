@@ -371,8 +371,8 @@
       <h1>Countdown</h1>
       <p class="lead">
         输入一个正整数 N，点击“开始”后页面会从 N 倒数到 1，最后显示
-        <strong>Liftoff!</strong>。它是仓库中 <code>scripts/countdown.py</code>
-        的可视化版本，使用相同的倒数逻辑（为保证动画流畅，演示最多支持 999）。
+        <strong>Liftoff!</strong>。页面使用原生 HTML、CSS 和 JavaScript
+        实现，无需安装依赖（为保证动画流畅，演示最多支持 999）。
       </p>
     </header>
 
@@ -407,19 +407,19 @@
     <section class="about">
       <h2>关于本项目</h2>
       <p>
-        superagent-trial 是一个小型演示仓库，核心是命令行脚本
-        <code>scripts/countdown.py</code>：接收正整数 N，逐行打印 N 到 1，
-        最后输出 <code>Liftoff!</code>；非法输入以退出码 2 报错，并支持
-        <code>--help</code>。测试位于 <code>tests/</code>，使用 pytest。
+        superagent-trial 是一个小型静态演示仓库，核心是
+        <code>docs/index.html</code> 中的倒计时页面：接收正整数 N，
+        从 N 倒数到 1，最后显示 <code>Liftoff!</code>；空值、0、负数
+        或非数字输入都会给出明确的错误提示。
       </p>
       <p>
-        本页面是它的纯静态演示，由 GitHub Pages 从 <code>docs/</code> 目录部署，
-        不依赖任何前端框架或外部资源。
+        页面由 GitHub Pages 从 <code>docs/</code> 目录部署，只使用原生
+        HTML、CSS 和 JavaScript，不依赖任何前端框架、构建步骤或外部资源。
       </p>
     </section>
   </main>
 
-  <footer>superagent-trial · static demo, no external dependencies</footer>
+  <footer>superagent-trial · 纯静态演示，无外部依赖</footer>
 
   <script>
     (function () {
